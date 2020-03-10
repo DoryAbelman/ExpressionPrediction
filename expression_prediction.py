@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python2/2.7.15
 
 # Pipeline for CNV analysis of Plasma-Seq data
 
@@ -143,7 +143,7 @@ def step5(ERR_LOG,OUT_LOG,args,proj_dir,script_dir,filenames):
     logging(OUT_LOG,"Step5 Calculate TSS profiles of housekeeping genes vs. unexpressed genes")
     logging(OUT_LOG,"Step5    a) Housekeeping genes")
     HOUSEKEEPING=open(filenames["housekeeping_profile"],"w")
-    tss_profile=subprocess.call([script_dir+"/Scripts/analyze_TSS_coverage.py","-rg",script_dir+"/Ref/refSeq_extended_names_strand.bed","-norm",
+    tss_profile=subprocess.call(["python",script_dir+"/Scripts/analyze_TSS_coverage.py","-rg",script_dir+"/Ref/refSeq_extended_names_strand.bed","-norm",
           "-gl",script_dir+"/Ref/GeneLists/HK_gene_names.txt","-m","0","-b",filenames["bam_file_rmdup"],"-t",str(args.threads),"-tmp",args.temp_dir],stderr=ERR_LOG,stdout=HOUSEKEEPING)
     HOUSEKEEPING.close()
     if tss_profile != 0:
@@ -152,7 +152,7 @@ def step5(ERR_LOG,OUT_LOG,args,proj_dir,script_dir,filenames):
 
     logging(OUT_LOG,"Step5    b) Unexpressed genes")
     UNEXPRESSED=open(filenames["unexpressed_profile"],"w")
-    tss_profile=subprocess.call([script_dir+"/Scripts/analyze_TSS_coverage.py","-rg",script_dir+"/Ref/refSeq_extended_names_strand.bed","-norm",
+    tss_profile=subprocess.call(["python",script_dir+"/Scripts/analyze_TSS_coverage.py","-rg",script_dir+"/Ref/refSeq_extended_names_strand.bed","-norm",
           "-gl",script_dir+"/Ref/GeneLists/Fantom5_all_lower0.1.txt","-m","0","-b",filenames["bam_file_rmdup"],"-t",str(args.threads),"-tmp",args.temp_dir],stderr=ERR_LOG,stdout=UNEXPRESSED)
     UNEXPRESSED.close()
     if tss_profile != 0:
@@ -162,23 +162,21 @@ def step5(ERR_LOG,OUT_LOG,args,proj_dir,script_dir,filenames):
 
     logging(OUT_LOG,"Step5    c) Plotting")
     INFILE1 = open(script_dir+"/Scripts/plot_TSS_profile.R","r")
-    subprocess.call(["R","--slave","--args",filenames["housekeeping_profile"],filenames["unexpressed_profile"],filenames["profile_plot"]],stdin=INFILE1,stderr=ERR_LOG,stdout=OUT_LOG)
+    subprocess.call("Rscript","--slave","--args",filenames["housekeeping_profile"]+" "+filenames["unexpressed_profile"]+" "+filenames["profile_plot"],stdin=INFILE1,stderr=ERR_LOG,stdout=OUT_LOG,shell=True)
     INFILE1.close()
-
-
 ######################################################################################################## 
 # Step6 extract coverage parameters for expression prediction
 def step6(ERR_LOG,OUT_LOG,args,proj_dir,script_dir,filenames):
     logging(OUT_LOG,"Step6 Extract coverage parameters")
     logging(OUT_LOG,"Step6    a) 2K-TSS Coverage")
     TSS_2K =open(filenames["coverage_2k_tss"],"w")
-    subprocess.call([script_dir+"/Scripts/analyze_all_genes_by_TSS_coverage_norm_LOG2.py","-rg",script_dir+"/Ref/refSeq_extended_names_strand.bed",
+    subprocess.call(["python",script_dir+"/Scripts/analyze_all_genes_by_TSS_coverage_norm_LOG2.py","-rg",script_dir+"/Ref/refSeq_extended_names_strand.bed",
                    "-b",filenames["bam_file_rmdup"],"-t",str(args.threads),"-gl",script_dir+"/Ref/GeneLists/AllGenes_NMonly.txt","-norm","-norm-file",args.cna_file,"-tmp","/tmp/"],stdout=TSS_2K,stderr=ERR_LOG)
     TSS_2K.close()
 
     logging(OUT_LOG,"Step6    b) NDR Coverage")
     TSS_NDR =open(filenames["coverage_ndr_tss"],"w")
-    subprocess.call([script_dir+"/Scripts/analyze_all_genes_by_TSS_coverage_norm_LOG2.py","-s","150","-e","50","-rg",script_dir+"/Ref/refSeq_extended_names_strand.bed",
+    subprocess.call(["python",script_dir+"/Scripts/analyze_all_genes_by_TSS_coverage_norm_LOG2.py","-s","150","-e","50","-rg",script_dir+"/Ref/refSeq_extended_names_strand.bed",
                "-b",filenames["bam_file_rmdup"],"-t",str(args.threads),"-gl",script_dir+"/Ref/GeneLists/AllGenes_NMonly.txt","-norm","-norm-file",args.cna_file,"-tmp","/tmp/"],stdout=TSS_NDR,stderr=ERR_LOG)
     TSS_NDR.close()
 
@@ -188,7 +186,7 @@ def step7(ERR_LOG,OUT_LOG,args,proj_dir,script_dir,filenames):
     logging(OUT_LOG,"Step7 Expression prediction")
     return_val=subprocess.call(["mkdir",filenames["prediction_folder"]])   
     INFILE_PRED = open(script_dir+"/Scripts/prediction_svm_housekeeping.R","r") 
-    r_return_value=subprocess.call(["R","--slave","--args",filenames["coverage_2k_tss"],filenames["coverage_ndr_tss"],filenames["prediction_folder"],script_dir+"/Ref"],stdin=INFILE_PRED,stderr=ERR_LOG,stdout=OUT_LOG)
+    r_return_value=subprocess.call("Rscript"," --slave,","--args",filenames["coverage_2k_tss"],filenames["coverage_ndr_tss"],filenames["prediction_folder"]+" "+script_dir+"/Ref",stdin=INFILE_PRED,stderr=ERR_LOG,stdout=OUT_LOG,shell=True)
     if r_return_value != 0:
         error_logging(ERR_LOG,"Error in expression prediction")
 
@@ -284,4 +282,3 @@ if (args.start_step <= 7):
     step7(ERR_LOG,OUT_LOG,args,proj_dir,script_dir,filenames)
 else:
     logging(OUT_LOG, "Skip expression prediction")
-
