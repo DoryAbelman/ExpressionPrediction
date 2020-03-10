@@ -22,3 +22,6 @@ Also needed for analysis:
 -) Step6 extract coverage parameters for expression prediction
 -) Step7 expression prediction
 
+New added notes:
+As Rmdup is now obsolete, and we have paired end reads, or lab uses picard's markduplicates to remove them. We then start from step 5 after duplicates have been removed and fastq's converted to bam's in the way the lab prefers. These new scripts will be uploaded to the repository.
+
