@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+#$ -cwd
+
+#Script for inferring DNA expression
+
+module load python2/2.7.15
+module load R/3.6.1 
+module load samtools/1.9
+python /mnt/work1/users/pughlab/projects/IEG_MiSEQ/Inferring_DNA_Expression/ExpressionPrediction-master/expression_prediction.py \
+    -fq /mnt/work1/users/pughlab/projects/IEG_MiSEQ/fastq_links/MMRF.fastq.gz \
+    -s Test_DuplicatesRemoved -g m -o /mnt/work1/users/pughlab/projects/IEG_MiSEQ/Inferring_DNA_Expression  \
+    -k -t 20 -cna /mnt/work1/users/pughlab/projects/MMRF/WGS_analysis/ichorCNA/MMRF.seg \
+    -tmp /mnt/work1/users/pughlab/projects/IEG_MiSEQ/Inferring_DNA_Expression/Temp \
+    -step 5
