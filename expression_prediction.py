@@ -159,11 +159,11 @@ def step5(ERR_LOG,OUT_LOG,args,proj_dir,script_dir,filenames):
         error_logging(ERR_LOG,"Error in TSS profiling")
 
 
-
     logging(OUT_LOG,"Step5    c) Plotting")
     INFILE1 = open(script_dir+"/Scripts/plot_TSS_profile.R","r")
-    subprocess.call("Rscript","--slave","--args",filenames["housekeeping_profile"]+" "+filenames["unexpressed_profile"]+" "+filenames["profile_plot"],stdin=INFILE1,stderr=ERR_LOG,stdout=OUT_LOG,shell=True)
+    subprocess.call("R --slave --args "+filenames["housekeeping_profile"]+" "+filenames["unexpressed_profile"]+" "+filenames["profile_plot"],stdin=INFILE1,stderr=ERR_LOG,stdout=OUT_LOG,shell=True)
     INFILE1.close()
+
 ######################################################################################################## 
 # Step6 extract coverage parameters for expression prediction
 def step6(ERR_LOG,OUT_LOG,args,proj_dir,script_dir,filenames):
@@ -182,17 +182,19 @@ def step6(ERR_LOG,OUT_LOG,args,proj_dir,script_dir,filenames):
 
 ######################################################################################################## 
 # Step7 expression prediction
+
 def step7(ERR_LOG,OUT_LOG,args,proj_dir,script_dir,filenames):
     logging(OUT_LOG,"Step7 Expression prediction")
-    return_val=subprocess.call(["mkdir",filenames["prediction_folder"]])   
-    INFILE_PRED = open(script_dir+"/Scripts/prediction_svm_housekeeping.R","r") 
-    r_return_value=subprocess.call("Rscript"," --slave,","--args",filenames["coverage_2k_tss"],filenames["coverage_ndr_tss"],filenames["prediction_folder"]+" "+script_dir+"/Ref",stdin=INFILE_PRED,stderr=ERR_LOG,stdout=OUT_LOG,shell=True)
+    return_val=subprocess.call(["mkdir",filenames["prediction_folder"]])
+    INFILE_PRED = open(script_dir+"/Scripts/prediction_svm_housekeeping.R","r")
+    r_return_value=subprocess.call("R --slave --args "+filenames["coverage_2k_tss"]+" "+filenames["coverage_ndr_tss"]+" "+filenames["prediction_folder"]+" "+script_dir+"/Ref",stdin=INFILE_PRED,stderr=ERR_LOG,stdout=OUT_LOG,shell=True)
     if r_return_value != 0:
         error_logging(ERR_LOG,"Error in expression prediction")
 
     INFILE_PRED.close()
 
-   
+ 
+ 
 
 ###################################################################################
 script_dir = os.path.dirname(os.path.realpath(__file__))
