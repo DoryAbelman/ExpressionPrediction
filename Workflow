@@ -1,0 +1,42 @@
+#As Rmdup is obsolete, this can be used instead to sort bam files \
+and remove duplicates from them
+
+
+# First, the bam file has to be sorted
+
+#!/bin/bash
+#
+#$ -cwd
+
+java -jar $picard_dir/picard.jar SortSam \
+      I=/mnt/work1/users/pughlab/projects/MMRF/WGS_bam_links/MMRF-13-FU2_S7.bam \
+      O=MMRF-13-FU2_S7_sorted.bam \
+      SORT_ORDER=coordinate
+
+# to run: sbatch -c 2 -t 1:00:00 --mem 16G <filename>
+
+#Next, duplicates are removed
+
+#!/bin/bash
+#
+#$ -cwd
+
+module load picard/2.10.9
+
+java -jar $picard_dir/picard.jar MarkDuplicates \
+      I=MMRF-13-FU2_S7_sorted.bam \
+      O=MMRF-13-FU2_S7_marked_duplicates.bam \
+      M=MMRF-13-FU2_S7_marked_dup_metrics.txt \
+      REMOVE_DUPLICATES=True
+
+# the file that ends with 'FU2_S7_marked_duplicates' has its duplicates removed
+
+#It can then be indexed: 
+
+#!/bin/bash
+#
+#$ -cwd
+
+module load samtools/1.9
+
+samtools index FU2_S7_DuplicatesRemoved.rmdup.bam
