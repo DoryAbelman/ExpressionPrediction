@@ -478,8 +478,8 @@ data$Prediction_Unexpr<-rep(0,length(data$Gene))
 for (i in 1:1000) {
     set.seed(i)
     data$Training<-rep(FALSE,length(data$Gene))
-    training_top_index<-sample(which(data$Expressed == "Top1000"),300)
-    training_bottom_index<-sample(which(data$Expressed == "Bottom1000"),300)
+    training_top_index<-sample(which(data$Expressed == "Top1000"),300, replace = FALSE, prob = NULL)
+    training_bottom_index<-sample(which(data$Expressed == "Bottom1000"),300, replace = FALSE, prob = NULL)
     data$Training[training_top_index]<-TRUE
     data$Training[training_bottom_index]<-TRUE
     training_data<-data.frame(Broad=c(data$Broad[training_top_index],data$Broad[training_bottom_index]),Small=c(data$Small[training_top_index],data$Small[training_bottom_index]))
@@ -569,7 +569,12 @@ plot(data$Broad[top_bottom],data$Small[top_bottom],col=col,xlim=c(0,broad_bounda
 dev.off()
 #Kernel density estimation
 library(MASS)
-kd_estimation<-kde2d(data$Broad[top_bottom],data$Small[top_bottom],n=50)
+#old
+#kd_estimation<-kde2d(data$Broad[top_bottom],data$Small[top_bottom],n=50)
+#new
+kd_estimation<-kde2d(data$Broad[top_bottom],data$Small[top_bottom],
+    h = c(ifelse(bandwidth.nrd(data$Broad[top_bottom]) == 0, 0.1, bandwidth.nrd(data$Broad[top_bottom])),
+          ifelse(bandwidth.nrd(data$Small[top_bottom]) == 0, 0.1, bandwidth.nrd(data$Small[top_bottom]))),n=50)
 
 png(paste(output_dir,"/KDE_Contour.png",sep=""))
 contour(kd_estimation,xlab="Broad Normalized Coverage",ylab="Small Coverage",xlim=c(0,broad_boundary),ylim=c(0,small_boundary))
@@ -579,7 +584,10 @@ png(paste(output_dir,"/Heatmap.png",sep=""))
 image(kd_estimation,xlab="Broad Normalized Coverage",ylab="Small Coverage",xlim=c(0,broad_boundary),ylim=c(0,small_boundary))
 dev.off()
 png(paste(output_dir,"/Perspective.png",sep="")) 
-persp(kd_estimation, phi = 45, theta = 30,xlab="Broad Normalized Coverage",ylab="Small Coverage",zlab="Density",xlim=c(0,broad_boundary),ylim=c(0,small_boundary))
+#old
+#persp(kd_estimation, phi = 45, theta = 30,xlab="Broad Normalized Coverage",ylab="Small Coverage",zlab="Density",xlim=c(0,broad_boundary),ylim=c(0,small_boundary))
+#new
+persp(kd_estimation, phi = 45, theta = 30,xlab="Broad Normalized Coverage",ylab="Small Coverage",zlab="Density",xlim=c(0,10),ylim=c(0,10))
 dev.off()
 
 png(paste(output_dir,"/Heatmap_contour.png",sep=""))
